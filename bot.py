@@ -11,7 +11,7 @@ print(f"Waiting {random_wait} seconds...")
 time.sleep(random_wait)
 
 # CONFIG
-SESSION_ID = os.environ.get("INSTA_SESSION_ID")
+SESSION_ID = os.environ.get("INSTA_SESSION_ID", "").strip()
 STATE_FILE = "state.json"
 PHOTO_FOLDER = "./photos"
 MUSIC_FOLDER = "./music"
@@ -57,23 +57,29 @@ try:
     # Cut Audio and Create Video
     extracted_audio = audio_clip.subclip(start_time, start_time + 6)
     
-    # 6 सेकंड के लिए इमेज का असली साइज रखना
-    photo_clip = ImageClip(current_photo).set_duration(6).set_fps(24)
+    # --- बदलाव (फिक्स): पहले इमेज का असली साइज लोड करना ताकि इवन नंबर का ग्लिच न आए ---
+    temp_clip = ImageClip(current_photo)
+    w, h = temp_clip.w, temp_clip.h
     
-    # हल्का सा ज़ूम-इन इफ़ेक्ट (0 से 6 सेकंड में इमेज बिल्कुल मामूली ज़ूम होगी)
+    # यदि साइज ऑड (Odd) है तो उसे इवन (Even) में बदलें ताकि FFmpeg क्रैश न हो
+    if w % 2 != 0: w -= 1
+    if h % 2 != 0: h -= 1
+    
+    # इमेज को उसके असली लेकिन सुधरे हुए इवन साइज में सेट करें
+    photo_clip = temp_clip.resize((w, h)).set_duration(6).set_fps(24)
+    
+    # अब मामूली ज़ूम-इन इफ़ेक्ट बिना किसी ग्लिच या लाइन्स के काम करेगा
     photo_clip = photo_clip.resize(lambda t: 1 + 0.016 * t)
-    
     photo_clip.audio = extracted_audio
     
     # Reel Save
     output = "final_reel.mp4"
     photo_clip.write_videofile(output, codec="libx264", audio_codec="aac", fps=24, logger=None)
 
-    # हर बार नया और यूनिक कैप्शन बनाने का लॉजिक (Fixed Title Parsing)
+    # हर बार नया और यूनिक कैप्शन बनाने का लॉजिक
     raw_title = songs[s_idx].replace('.mp3', '').replace('.wav', '').replace('.m4a', '')
     song_title = raw_title.split(" 128")[0].split(" 320")[0].strip()
     
-    # --- बदलाव: वायरल होने वाले Deep और Sad कैप्शंस की लिस्ट ---
     mood_lines = [
         f"कुछ रिश्ते दर्द नहीं देते, सबक दे जाते हैं... 💔🥀 | 🎧: {song_title}",
         f"सबके बीच रहकर भी जो खालीपन लगे, वही असली अकेलापन है। 🌌🩹 | 🎧: {song_title}",
@@ -87,7 +93,6 @@ try:
         f"It hurts, but it's okay. I'm used to it. 💔🌌 | 🎧: {song_title}"
     ]
     
-    # --- बदलाव: सैड वीडियो के लिए बेस्ट रीच वाले हैशटैग सेट्स ---
     hashtag_sets = [
         "\n\n#sadreels #brokenheart #sadstatus #feelings #aesthetic #explorepage",
         "\n\n#alone #sadshayari #lovesongs #bgm #trendingreels #foryou",
@@ -111,6 +116,7 @@ try:
     # Clean up
     audio_clip.close()
     photo_clip.close()
+    temp_clip.close()
     os.remove(output)
 
 except Exception as e:
