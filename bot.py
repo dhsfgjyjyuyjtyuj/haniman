@@ -57,44 +57,50 @@ try:
     # Cut Audio and Create Video
     extracted_audio = audio_clip.subclip(start_time, start_time + 6)
     
-    # --- बदलाव: इमेज का असली साइज रखने के लिए .resize() हटा दिया गया है ---
+    # 6 सेकंड के लिए इमेज का असली साइज रखना
     photo_clip = ImageClip(current_photo).set_duration(6).set_fps(24)
+    
+    # हल्का सा ज़ूम-इन इफ़ेक्ट (0 से 6 सेकंड में इमेज बिल्कुल मामूली ज़ूम होगी)
+    photo_clip = photo_clip.resize(lambda t: 1 + 0.016 * t)
+    
     photo_clip.audio = extracted_audio
     
     # Reel Save
     output = "final_reel.mp4"
     photo_clip.write_videofile(output, codec="libx264", audio_codec="aac", fps=24, logger=None)
 
-    # हर बार नया और यूनिक कैप्शन बनाने का लॉजिक
+    # हर बार नया और यूनिक कैप्शन बनाने का लॉजिक (Fixed Title Parsing)
     raw_title = songs[s_idx].replace('.mp3', '').replace('.wav', '').replace('.m4a', '')
     song_title = raw_title.split(" 128")[0].split(" 320")[0].strip()
     
+    # --- बदलाव: वायरल होने वाले Deep और Sad कैप्शंस की लिस्ट ---
     mood_lines = [
-        f"This song hits different... 🎧✨ | Listening to: {song_title}",
-        f"Current vibe status: ON repeat! ❤️🎵 | {song_title}",
-        f"Feelin' this melody today. ✨🎶 | Song: {song_title}",
-        f"Let the music heal your soul. 🎧💫 | Now Playing: {song_title}",
-        f"Just close your eyes and feel the music. 🌟 | {song_title}",
-        f"Can't get this track out of my head! 🎶🔥 | {song_title}",
-        f"Music is the shorthand of emotion. ❤️🎧 | {song_title}",
-        f"A perfect song for a perfect mood. ✨🎵 | Now Playing: {song_title}",
-        f"Lost in the rhythm of this sound. 🌌🎶 | {song_title}",
-        f"Some songs just touch the heart directly. 🎧💖 | {song_title}"
+        f"कुछ रिश्ते दर्द नहीं देते, सबक दे जाते हैं... 💔🥀 | 🎧: {song_title}",
+        f"सबके बीच रहकर भी जो खालीपन लगे, वही असली अकेलापन है। 🌌🩹 | 🎧: {song_title}",
+        f"दर्द कम नहीं हुआ है मेरा, बस सहने की आदत हो गयी है। 🥲💔 | 🎧: {song_title}",
+        f"हम अधूरे लोग हैं... हमारी न नींद पूरी होती है, न ख्वाब। 💭🥀 | 🎧: {song_title}",
+        f"खामोशी में भी कैसे रोया जाता है, ये सिर्फ टूटा हुआ दिल जानता है। 🤫💧 | 🎧: {song_title}",
+        f"जो टूटकर भी मुस्कुरा दे, ऐसा इंसान हूँ मैं... 🩹🙂 | 🎧: {song_title}",
+        f"Tune mujhe adhoora chhod diya, aur khud aage badh gaya. 💔🍂 | 🎧: {song_title}",
+        f"Dard chhupa lena hi ab aadat ban gayi hai... 🥀🖤 | 🎧: {song_title}",
+        f"Aansoo bhi ab mere nahi rahe, woh भी तेरा नाम लेकर गिरते हैं। 🥹💧 | 🎧: {song_title}",
+        f"It hurts, but it's okay. I'm used to it. 💔🌌 | 🎧: {song_title}"
     ]
     
+    # --- बदलाव: सैड वीडियो के लिए बेस्ट रीच वाले हैशटैग सेट्स ---
     hashtag_sets = [
-        "\n\n#music #reels #trending #explore #viral #foryou",
-        "\n\n#trendingreels #instamusic #vibes #explorepage #fyp",
-        "\n\n#reelsindia #viralvideos #lovesongs #bgm #instagramreels",
-        "\n\n#songstatus #feelthemusic #reelsviral #trendingnow #musiclover",
-        "\n\n#statusvideo #hindisongs #explore #foryoupage #soundon"
+        "\n\n#sadreels #brokenheart #sadstatus #feelings #aesthetic #explorepage",
+        "\n\n#alone #sadshayari #lovesongs #bgm #trendingreels #foryou",
+        "\n\n#mood #sadstatus #hindishayari #relatablequotes #viralreels #fyp",
+        "\n\n#heartbroken #lonelyvibes #truelines #instagramreels #soundon",
+        "\n\n#sadposts #shayarilover #feelthemusic #deepfeelings #explore #viral"
     ]
     
     caption = random.choice(mood_lines) + random.choice(hashtag_sets)
 
     # Upload
     cl.clip_upload(output, caption=caption)
-    print("✅ Upload Successful!")
+    print("✅ Upload Successful with Sad Caption!")
 
     # Update State for NEXT RUN
     state["photo_index"] = p_idx + 1
